@@ -26,6 +26,74 @@ const client = new MongoClient(uri, {
   }
 });
 
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    const db = client.db('krishLink');
+    const modelCollection = db.collection('card');
+
+
+
+    app.get('/latest-products', async (req, res) => {
+      const cursor = modelCollection.find().sort({pricePerUnit:1}).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.get('/card', async (req, res) => {
+      const result = await modelCollection.find().toArray()
+      res.send(result);
+    })
+
+
+    app.post('/card', async (req, res) => {
+      const data = req.body
+      console.log(data)
+      const result = await modelCollection.insertOne(data)
+      res.send({
+        success: true
+      })
+
+    })
+
+    app.get('/card/:id', async (req, res) => {
+      const { id } = req.params;
+      const objectId = new ObjectId(id);
+      const result = await modelCollection.findOne({ _id: objectId })
+
+      res.send({
+        success: true,
+        result
+      })
+    })
+
+
+    //  fetch('',{
+    //    method: 'POST',
+    //    headers:{
+    //     "Content-Type":"application/json",
+    //    },
+    //    body:JSON.stringify(FormData)
+    //  })
+    //  .then(res=>res.json())
+    //  .then(data=>{
+    //   console.log(data)
+    //  })
+    //  .catch(err=>{
+    //   console.log(err)
+    //  })
+
+
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close();
+  }
+}
+run().catch(console.dir);
 
 
 
