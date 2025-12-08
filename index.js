@@ -60,11 +60,12 @@ async function run() {
     app.get('/card/:id', async (req, res) => {
       const { id } = req.params;
       const objectId = new ObjectId(id);
-      const result = await modelCollection.findOne({ _id: objectId })
+     const result = await modelCollection.findOne({ _id: id });
 
       res.send({
         success: true,
         result
+
       })
     })
 
