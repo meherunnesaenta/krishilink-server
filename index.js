@@ -73,6 +73,14 @@ async function run() {
 
     })
 
+    app.get('/card/interest/:productId',async(req,res)=>{
+      const productId =req.params.productId;
+      const query ={product: productId}
+      const cursor =interestCollection.find(query).sort({price:-1})
+      const result =await cursor.toArray();
+      res.send(result);
+    })
+
     app.get('/card/:id', async (req, res) => {
       const { id } = req.params;
       const objectId = new ObjectId(id);
