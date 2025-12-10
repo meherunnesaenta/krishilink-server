@@ -32,6 +32,7 @@ async function run() {
     await client.connect();
     const db = client.db('krishLink');
     const modelCollection = db.collection('card');
+    const interestCollection =db.collection('interest');
 
 
 
@@ -51,6 +52,21 @@ async function run() {
       const data = req.body
       console.log(data)
       const result = await modelCollection.insertOne(data)
+      res.send({
+        success: true
+      })
+
+    })
+    app.get('/interest', async (req, res) => {
+      const result = await interestCollection.find().toArray()
+      res.send(result);
+    })
+
+
+    app.post('/interest', async (req, res) => {
+      const data = req.body
+      console.log(data)
+      const result = await interestCollection.insertOne(data)
       res.send({
         success: true
       })
