@@ -57,6 +57,20 @@ async function run() {
       })
 
     })
+
+    app.get('/interest',async(req,res)=>{
+
+      const query ={};
+      if(query.email){
+        query.buyer_email=email;
+      }
+
+      const cursor = interestCollection.find(query);
+      const result =await cursor.toArray();
+      res.send(result);
+    })
+
+
     app.get('/interest', async (req, res) => {
       const result = await interestCollection.find().toArray()
       res.send(result);
@@ -92,22 +106,6 @@ async function run() {
 
       })
     })
-
-
-    //  fetch('',{
-    //    method: 'POST',
-    //    headers:{
-    //     "Content-Type":"application/json",
-    //    },
-    //    body:JSON.stringify(FormData)
-    //  })
-    //  .then(res=>res.json())
-    //  .then(data=>{
-    //   console.log(data)
-    //  })
-    //  .catch(err=>{
-    //   console.log(err)
-    //  })
 
 
     // Send a ping to confirm a successful connection
