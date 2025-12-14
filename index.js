@@ -31,12 +31,13 @@ async function run() {
     await client.connect();
     const db = client.db('krishLink');
     const modelCollection = db.collection('card');
-    const interestCollection =db.collection('interest');
+    const interestCollection = db.collection('interest');
+    const usersCollection=db.collection('user');
 
 
 
     app.get('/latest-products', async (req, res) => {
-      const cursor = modelCollection.find().sort({pricePerUnit:1}).limit(6);
+      const cursor = modelCollection.find().sort({ pricePerUnit: 1 }).limit(6);
       const result = await cursor.toArray();
       res.send(result);
     })
@@ -45,6 +46,20 @@ async function run() {
       const result = await modelCollection.find().toArray()
       res.send(result);
     })
+
+
+    app.patch("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const updatedInfo = req.body;
+
+      const result = await usersCollection.updateOne(
+        { email },
+        { $set: updatedInfo }
+      );
+
+      res.send(result);
+    });
+
 
 
     app.post('/card', async (req, res) => {
@@ -57,15 +72,17 @@ async function run() {
 
     })
 
-    app.get('/interest',async(req,res)=>{
+    
 
-      const query ={};
-      if(query.email){
-        query.buyer_email=email;
+    app.get('/interest', async (req, res) => {
+
+      const query = {};
+      if (query.email) {
+        query.buyer_email = email;
       }
 
       const cursor = interestCollection.find(query);
-      const result =await cursor.toArray();
+      const result = await cursor.toArray();
       res.send(result);
     })
 
@@ -86,18 +103,18 @@ async function run() {
 
     })
 
-    app.get('/card/interest/:productId',async(req,res)=>{
-      const productId =req.params.productId;
-      const query ={product: productId}
-      const cursor =interestCollection.find(query).sort({price:-1})
-      const result =await cursor.toArray();
+    app.get('/card/interest/:productId', async (req, res) => {
+      const productId = req.params.productId;
+      const query = { product: productId }
+      const cursor = interestCollection.find(query).sort({ price: -1 })
+      const result = await cursor.toArray();
       res.send(result);
     })
 
     app.get('/card/:id', async (req, res) => {
       const { id } = req.params;
       const objectId = new ObjectId(id);
-     const result = await modelCollection.findOne({ _id: id });
+      const result = await modelCollection.findOne({ _id: id });
 
       res.send({
         success: true,
