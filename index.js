@@ -6,17 +6,52 @@ const app = express()
 const port = process.env.PORT || 3000
 console.log(process.env);
 
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./krishilink-firebase-admin-key.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 
 app.use(express.json());
 app.use(cors());
 
-app.get('/', (req, res) => {
-  res.send('server is running fine !')
-})
+const logger = (req, res, next) => {
+  console.log(`${req.method} ${req.path} at ${new Date().toISOString()}`);
+  next();
+}
+
+const verifyFirebaseToken =async (req, res, next) => {
+  console.log('Verifying Firebase token...',req.headers.authorization);
+  if(!req.headers.authorization){
+    return res.status(401).send({message: 'Unauthorized access'});
+  }
+  const token = req.headers.authorization.split(' ')[1];
+  if(!token){
+    return res.status(401).send({message: 'Unauthorized access'});
+  }
+
+  try{
+    const userInfo= await admin.auth().verifyIdToken(token);
+    console.log('after token verification',userInfo);
+    next();
+  }
+  catch{
+    return res.status(401).send({message: 'Unauthorized access'});
+  }
+ 
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.chnqfjs.mongodb.net/?appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
+
+
+app.get('/', (req, res) => {
+  res.send('server is running fine !')
+})
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -74,8 +109,9 @@ async function run() {
 
     
 
-    app.get('/interest', async (req, res) => {
+    app.get('/interest',logger,verifyFirebaseToken, async (req, res) => {
 
+      console.log('headers', req.headers);
       const query = {};
       if (query.email) {
         query.buyer_email = email;
@@ -87,10 +123,6 @@ async function run() {
     })
 
 
-    app.get('/interest', async (req, res) => {
-      const result = await interestCollection.find().toArray()
-      res.send(result);
-    })
 
 
     app.post('/interest', async (req, res) => {
