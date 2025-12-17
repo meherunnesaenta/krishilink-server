@@ -218,18 +218,34 @@ app.delete('/card/:id', verifyFirebaseToken, async (req, res) => {
 
 
 
-    app.get('/interest', logger, verifyFirebaseToken, async (req, res) => {
+app.get('/interest', verifyFirebaseToken, async (req, res) => {
+  try {
+    const loggedInEmail = req.user.email;
+    const requestedEmail = req.query.email;  
 
-      console.log('headers', req.headers);
-      const query = {};
-      if (query.email) {
-        query.buyer_email = email;
-      }
+    console.log("My Interests request:");
+    console.log("Logged in user:", loggedInEmail);
+    console.log("Requested email (query):", requestedEmail || "none");
 
-      const cursor = interestCollection.find(query);
-      const result = await cursor.toArray();
-      res.send(result);
-    })
+    if (requestedEmail && requestedEmail !== loggedInEmail) {
+      console.log("Forbidden attempt by:", loggedInEmail);
+      return res.status(403).json({ message: "Forbidden: You can only view your own interests" });
+    }
+
+    const filter = { buyer_email: loggedInEmail };
+
+    const result = await interestCollection
+      .find(filter)
+      .sort({ _id: -1 })
+      .toArray();
+
+    console.log(`Found ${result.length} interests for ${loggedInEmail}`);
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching my interests:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
     app.get('/myposts', async (req, res) => {
