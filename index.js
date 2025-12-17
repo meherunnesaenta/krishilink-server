@@ -4,7 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 const app = express()
 const port = process.env.PORT || 3000
-console.log(process.env);
+// console.log(process.env);
 
 const admin = require("firebase-admin");
 
@@ -64,7 +64,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const db = client.db('krishLink');
     const modelCollection = db.collection('card');
     const interestCollection = db.collection('interest');
@@ -73,7 +73,7 @@ async function run() {
 
 
     app.get('/latest-products', async (req, res) => {
-      const cursor = modelCollection.find().sort({ pricePerUnit: 1 }).limit(6);
+      const cursor = modelCollection.find().sort({ pricePerUnit: 1 }).limit(8);
       const result = await cursor.toArray();
       res.send(result);
     })
@@ -85,10 +85,6 @@ async function run() {
 
 
 app.patch('/interest/:id/status', verifyFirebaseToken, async (req, res) => {
-  console.log("=== Accept/Reject Request Started ===");
-  console.log("Interest ID:", req.params.id);
-  console.log("New Status:", req.body.status);
-  console.log("Logged in user email:", req.user?.email);
 
   const { id } = req.params;
   const { status } = req.body;
@@ -99,32 +95,27 @@ app.patch('/interest/:id/status', verifyFirebaseToken, async (req, res) => {
   }
 
   try {
-    console.log("Step 1: Finding interest...");
+
     const interest = await interestCollection.findOne({ _id: new ObjectId(id) });
 
     if (!interest) {
-      console.log("Interest NOT FOUND");
+     
       return res.status(404).json({ success: false, message: 'Interest not found' });
     }
-    console.log("Interest found:", interest._id, "cropId:", interest.cropId);
+   
 
-    console.log("Step 2: Finding crop...");
     const crop = await modelCollection.findOne({ _id: new ObjectId(interest.cropId) });
 
     if (!crop) {
-      console.log("CROP NOT FOUND with cropId:", interest.cropId);
+  
       return res.status(404).json({ success: false, message: 'Crop not found' });
     }
-    console.log("Crop found. Owner email:", crop.owner?.ownerEmail);
-
-    console.log("Step 3: Checking ownership...");
+   
     if (crop.owner?.ownerEmail !== req.user.email) {
       console.log("FORBIDDEN: User", req.user.email, "is not owner", crop.owner?.ownerEmail);
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
-    console.log("Ownership verified");
 
-    console.log("Step 4: Updating status...");
     const result = await interestCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: { status: status } }
@@ -293,7 +284,7 @@ app.get('/card/interest/:productId', logger, verifyFirebaseToken, async (req, re
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
